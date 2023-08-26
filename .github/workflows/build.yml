@@ -4,6 +4,10 @@ on:
     push:
         branches: [ ci, master, latest, 3.3-stable ]
     workflow_dispatch:
+        branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
 permissions:
     statuses: write
     contents: read
@@ -31,7 +35,19 @@ jobs:
               run: cmake -S . -B build-shared -D BUILD_SHARED_LIBS=ON
             - name: Build shared library
               run: cmake --build build-shared --parallel
-
+      sonarcloud:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          
     build-linux-full-clang:
         name: X11+Wayland (Linux, Clang)
         runs-on: ubuntu-latest
